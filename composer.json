@@ -1,0 +1,23 @@
+{
+    "name": "sigep/request",
+    "description": "",
+    "authors": [
+        {
+            "name": "Luís Henrique",
+            "email": "luish.faria@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.1.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Sigep\\Request\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}

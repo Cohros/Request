@@ -207,29 +207,27 @@ class Request
             $use = array_diff($get, $exclude);
             $this->filter = [];
 
-            if ($use) {
-                foreach ($use as $field) {
-                    $value = explode(',', $_GET[$field]);
-                    $this->filter[$field] = [];
+            foreach ($use as $field) {
+                if (empty($_GET[$field])) {
+                    continue;
+                }
+                $value = explode(',', $_GET[$field]);
 
-                    foreach ($value as $_value) {
-                        $compOperator = $_value[0];
-                        if ($compOperator === '!') {
-                            $compOperator = 'NOT';
-                        }
+                $this->filter[$field] = [];
 
-                        if (!in_array($compOperator, $howCompare)) {
-                            $compOperator = '=';
-                        } else {
-                            $_value = substr($_value, 1);
-                        }
-
-                        $this->filter[$field][] = array($compOperator, $_value);
+                foreach ($value as $_value) {
+                    $compOperator = $_value[0];
+                    if ($compOperator === '!') {
+                        $compOperator = 'NOT';
                     }
 
-                    if (!$this->filter[$field]) {
-                        unset($this->filter[$field]);
+                    if (!in_array($compOperator, $howCompare)) {
+                        $compOperator = '=';
+                    } else {
+                        $_value = substr($_value, 1);
                     }
+
+                    $this->filter[$field][] = array($compOperator, $_value);
                 }
             }
         }

@@ -23,6 +23,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([], $this->object->filter());
     }
 
+    public function testSetDefaultOffset()
+    {
+        $_GET = [];
+        $this->object->setDefaultOffset(13);
+        $this->assertEquals(13, $this->object->offset());
+    }
+
     public function testPaginateWhenPageIsSet()
     {
         $_GET['page'] = 7;
@@ -78,6 +85,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             'genre' => 'rock',
             'year' => '2000,2001,2002',
             'tracks' => '>6,<10,!8',
+            'sherpa' => null
         );
         $this->assertEquals(array(
             'genre' => array(

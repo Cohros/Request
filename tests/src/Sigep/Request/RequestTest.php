@@ -1,11 +1,13 @@
 <?php
 namespace Sigep\Request;
 
-class RequestTest extends \PHPUnit_Framework_TestCase {
+class RequestTest extends \PHPUnit_Framework_TestCase
+{
 
     protected $object = null;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->object = new Request;
     }
 
@@ -92,5 +94,21 @@ class RequestTest extends \PHPUnit_Framework_TestCase {
                 array ('NOT', '8'),
             )
         ), $this->object->filter());
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testExceptionSettingDefaultOffsetWithZero()
+    {
+        $this->object->setDefaultOffset(0);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testExceptionSettingDefaultOffsetWithLetter()
+    {
+        $this->object->setDefaultOffset('a');
     }
 }

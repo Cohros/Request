@@ -24,52 +24,52 @@ class Request
     protected $offset = null;
 
     /**
-     * The default value when $_GET['offset'] is not set
+     * The default value when offset is not set
      * @var bool
      */
     protected $defaultOffset = 15;
 
     /**
-     * Identify wich associations must be returned
+     * Identify which associations should be returned
      * @var array
      */
     protected $embed = null;
 
     /**
-     * @var array
-     */
-    protected $except = null;
-
-    /**
-     * @var array
-     */
-    protected $where = null;
-
-    /**
+     * How results must be ordered
      * @var array
      */
     protected $sort = null;
 
     /**
-     * search query
+     * Search query (textual)
      * @var string
      */
     protected $search = null;
 
     /**
-     * filters
+     * Filters: has fieldName, an operator and values to compare
      * @var array
      */
     protected $filter = null;
 
+    /**
+     * return default offset
+     * @return int
+     */
     public function getDefaultOffset()
     {
         return $this->defaultOffset;
     }
 
+    /**
+     * set default offset
+     * @param int $offset
+     * @throws InvalidArgumentException If $offset is not int or != 0
+     */
     public function setDefaultOffset($offset)
     {
-        if (!is_int($offset)) {
+        if (!is_int($offset) || !$offset) {
             throw new \InvalidArgumentException('offset MUST be int');
         }
 
@@ -77,6 +77,7 @@ class Request
     }
 
     /**
+     * Determine if request wants paginated data
      * @return bool
      */
     public function paginate()
@@ -89,6 +90,8 @@ class Request
     }
 
     /**
+     * Get page requested
+     * ?page=X
      * @return mixed page number or null
      */
     public function page()
@@ -101,7 +104,8 @@ class Request
     }
 
     /**
-     *
+     * Get name of associated data that should be returned
+     * ?embed=a,b,c
      * @return array
      */
     public function embed()
@@ -114,7 +118,10 @@ class Request
     }
 
     /**
-     * @return mixed offset or null
+     * Get offset of data to pagination of the request
+     * If is not present in request, use the default value
+     * ?offset=9
+     * @return int
      */
     public function offset()
     {
@@ -126,8 +133,10 @@ class Request
     }
 
     /**
-     *
-     * @return
+     * Get rules to ordenate results
+     * ?order=field,field2
+     * If the field name is preceded by a '-', the sort will be descending, otherwise ascending
+     * @return array
      */
     public function sort()
     {
@@ -154,6 +163,8 @@ class Request
     }
 
     /**
+     * Get search query
+     * ?q=hello word
      * @return string
      */
     public function search()
@@ -165,6 +176,13 @@ class Request
         return $this->search;
     }
 
+    /**
+     * Get filter rules
+     * ?field=value
+     * The default operator is '=' and it can be changed preceding the value
+     * with a special character. Supported are '>', '<', '=>', '<=' and '!'.
+     * @return array
+     */
     public function filter()
     {
         if (is_null($this->filter)) {

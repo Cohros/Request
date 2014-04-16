@@ -180,7 +180,7 @@ trait TraitRequest
      * Get filter rules
      * ?field=value
      * The default operator is '=' and it can be changed preceding the value
-     * with a special character. Supported are '>', '<', '=>', '<=' and '!'.
+     * with a special character. Supported are '>', '<', and '!'.
      * @return array
      */
     public function filter()
@@ -199,8 +199,6 @@ trait TraitRequest
                 '=',
                 '>',
                 '<',
-                '=>',
-                '=<',
                 'NOT',
             );
 

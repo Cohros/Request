@@ -134,7 +134,7 @@ trait TraitRequest
 
     /**
      * Get rules to ordenate results
-     * ?order=field,field2
+     * ?sort=field,field2
      * If the field name is preceded by a '-', the sort will be descending, otherwise ascending
      * @return array
      */

@@ -54,6 +54,21 @@ trait TraitRequest
     protected $filter = null;
 
     /**
+     * $_GET
+     * @var array
+     */
+    protected $get = null;
+
+    protected function get()
+    {
+        if (is_null($this->get)) {
+            $this->get = filter_var_array((array) $_GET, FILTER_SANITIZE_STRING);
+        }
+
+        return $this->get;
+    }
+
+    /**
      * return default offset
      * @return int
      */
@@ -83,7 +98,8 @@ trait TraitRequest
     public function paginate()
     {
         if (is_null($this->paginate)) {
-            $this->paginate = (isset($_GET['page']));
+            $this->get();
+            $this->paginate = (isset($this->get['page']));
         }
 
         return $this->paginate;
@@ -97,7 +113,8 @@ trait TraitRequest
     public function page()
     {
         if (is_null($this->page)) {
-            $this->page = (isset($_GET['page'])) ? (int) $_GET['page'] : 1;
+            $this->get();
+            $this->page = (isset($this->get['page'])) ? (int) $this->get['page'] : 1;
         }
 
         return $this->page;
@@ -111,7 +128,8 @@ trait TraitRequest
     public function embed()
     {
         if (is_null($this->embed)) {
-            $this->embed = (isset($_GET['embed'])) ? explode(',', $_GET['embed']) : [];
+            $this->get();
+            $this->embed = (isset($this->get['embed'])) ? explode(',', $this->get['embed']) : [];
         }
 
         return $this->embed;
@@ -126,7 +144,8 @@ trait TraitRequest
     public function offset()
     {
         if (is_null($this->offset)) {
-            $this->offset = (isset($_GET['offset'])) ? (int) $_GET['offset'] : $this->defaultOffset;
+            $this->get();
+            $this->offset = (isset($this->get['offset'])) ? (int) $this->get['offset'] : $this->defaultOffset;
         }
 
         return $this->offset;
@@ -141,25 +160,38 @@ trait TraitRequest
     public function sort()
     {
         if (is_null($this->sort)) {
+            $this->get();
             $this->sort = [];
 
-            $sort = (isset($_GET['sort'])) ? explode(',', $_GET['sort']) : [];
-            if ($sort) {
-                foreach ($sort as $field) {
-                    $field = $field;
-                    $direction = 'ASC';
+            $sort = [];
+            if (!empty($this->get['sort'])) {
+                $sort = explode(',', $this->get['sort']);
+            }
+            
+            foreach ($sort as $field) {
+                $field = $this->defineSortDirection($field);
 
-                    if ($field[0] === '-') {
-                        $field = substr($field, 1);
-                        $direction = 'DESC';
-                    }
-
-                    $this->sort[$field] = $direction;
-                }
+                $this->sort[$field['value']] = $field['direction'];
             }
         }
 
         return $this->sort;
+    }
+
+    private function defineSortDirection($value)
+    {
+        $value = (string) $value;
+        $direction = 'ASC';
+
+        if ($value[0] === '-') {
+            $value = substr($value, 1);
+            $direction = 'DESC';
+        }
+
+        return array (
+            'value' => $value,
+            'direction' => $direction,
+        );
     }
 
     /**
@@ -170,7 +202,8 @@ trait TraitRequest
     public function search()
     {
         if (is_null($this->search)) {
-            $this->search = (isset($_GET['q'])) ? $_GET['q'] : '';
+            $this->get();
+            $this->search = (isset($this->get['q'])) ? $this->get['q'] : '';
         }
 
         return $this->search;
@@ -180,56 +213,147 @@ trait TraitRequest
      * Get filter rules
      * ?field=value
      * The default operator is '=' and it can be changed preceding the value
-     * with a special character. Supported are '>', '<', and '!'.
+     * with a special character. Supported are '-', '+', and '!'.
      * @return array
      */
     public function filter()
     {
-        if (is_null($this->filter)) {
-            $get = array_keys($_GET);
-            $exclude = array (
-                'page',
-                'offset',
-                'sort',
-                'q',
-                'embed',
-            );
+        $exclude = array ('page', 'offset', 'sort', 'q', 'embed');
+        $get = array_diff($this->get(), $exclude);
 
-            $howCompare = array (
-                '=',
-                '>',
-                '<',
-                'NOT',
-            );
+        foreach ($get as $field => $rules) {
+            $get[$field] = $this->filterOrganize($rules);
+        }
 
-            $use = array_diff($get, $exclude);
-            $this->filter = [];
+        return $get;
+        // organizar ands e ors
+        // agrupar operadores
+    }
 
-            foreach ($use as $field) {
-                if (empty($_GET[$field])) {
-                    continue;
+    private function filterOrganize($rules)
+    {
+        $rules = explode(';', $rules);
+        $response = array (
+            'and' => array(),
+        );
+
+        foreach ($rules as $rule) {
+            $rule = explode(',', $rule);
+
+            if (count($rule) == 1) {
+                $operator = $this->extractFilterOperator($rule[0]);
+                if (!isset($response[$operator['operator']])) {
+                    $response[$operator['operator']] = array();
                 }
-                $value = explode(',', $_GET[$field]);
-
-                $this->filter[$field] = [];
-
-                foreach ($value as $_value) {
-                    $compOperator = $_value[0];
-                    if ($compOperator === '!') {
-                        $compOperator = 'NOT';
+                $response[$operator['operator']][] = $operator['value'];
+            } else {
+                foreach ($rule as $piece) {
+                    $operator = $this->extractFilterOperator($piece);
+                    if (!isset($response['and'][$operator['operator']])) {
+                        $response['and'][$operator['operator']] = array();
                     }
-
-                    if (!in_array($compOperator, $howCompare)) {
-                        $compOperator = '=';
-                    } else {
-                        $_value = substr($_value, 1);
-                    }
-
-                    $this->filter[$field][] = array($compOperator, $_value);
+                    $response['and'][$operator['operator']][] = $operator['value'];
                 }
             }
         }
 
-        return $this->filter;
+        if (empty($response['and'])) {
+            unset($response['and']);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Search for operators in $value (>, <, +, etc)
+     * @param  string $value
+     * @return array  associative array with operator and cleaned value
+     */
+    private function extractFilterOperator($value)
+    {
+        $tests = array (
+            'testFilterBiggerThan' => '>',
+            'testFilterBiggerOrEqualsThan' => '>=',
+            'testFilterSmallerThan' => '<',
+            'testFilterSmallerOrEqualsThan' => '<=',
+            'testFilterNotEqualThan' => 'NOT',
+        );
+
+        foreach ($tests as $test => $operator) {
+            $result = $this->{$test}($value);
+            if (!is_null($result)) {
+                return array (
+                    'operator' => $operator,
+                    'value' => $result,
+                );
+            }
+        }
+
+        return array (
+            'operator' => '=',
+            'value' => $value
+        );
+    }
+
+    /**
+     * test operator >
+     * @param  string $value
+     * @return mixed  clean $value if the filter operator was found or null
+     */
+    private function testFilterBiggerThan($value)
+    {
+        if ($value[0] == '+' || $value[0] == '>') {
+            return substr($value, 1);
+        }
+    }
+
+    /**
+     * test operator >=
+     * @param  string $value
+     * @return mixed  clean $value if the filter operator was found or null
+     */
+    private function testFilterBiggerOrEqualsThan($value)
+    {
+        $lastChar = $value[strlen($value) - 1];
+        if ($lastChar == '+' || $lastChar== '>') {
+            return substr($value, 0, strlen($value) - 1);
+        }
+    }
+
+    /**
+     * test operator <
+     * @param  string $value
+     * @return mixed  clean $value if the filter operator was found or null
+     */
+    private function testFilterSmallerThan($value)
+    {
+        if ($value[0] == '-' || $value[0] == '<') {
+            return substr($value, 1);
+        }
+    }
+
+    /**
+     * test operator <=
+     * @param  string $value
+     * @return mixed  clean $value if the filter operator was found or null
+     */
+    private function testFilterSmallerOrEqualsThan($value)
+    {
+        $lastChar = $value[strlen($value) - 1];
+        if ($lastChar == '-' || $lastChar== '<') {
+            return substr($value, 0, strlen($value) - 1);
+        }
+    }
+
+    /**
+     * test operator !
+     * @param  string $value
+     * @return mixed  clean value if the operator was found or null
+     */
+    private function testFilterNotEqualThan($value)
+    {
+        if ($value[0] == '!') {
+            return substr($value, 1);
+        }
     }
 }

@@ -3,3 +3,8 @@ index.php
 /nbproject
 /.idea
 /report
+/nbproject
+/.settings
+/.buildpath
+/.project
+composer.lock

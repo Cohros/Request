@@ -59,7 +59,11 @@ trait TraitRequest
      */
     protected $get = null;
 
-    protected function get()
+    /**
+     * filter $_GET
+     * @return [type] [description]
+     */
+    protected function _get()
     {
         if (is_null($this->get)) {
             $this->get = filter_var_array((array) $_GET, FILTER_SANITIZE_STRING);
@@ -98,7 +102,7 @@ trait TraitRequest
     public function paginate()
     {
         if (is_null($this->paginate)) {
-            $this->get();
+            $this->_get();
             $this->paginate = (isset($this->get['page']));
         }
 
@@ -113,7 +117,7 @@ trait TraitRequest
     public function page()
     {
         if (is_null($this->page)) {
-            $this->get();
+            $this->_get();
             $this->page = (isset($this->get['page'])) ? (int) $this->get['page'] : 1;
         }
 
@@ -128,7 +132,7 @@ trait TraitRequest
     public function embed()
     {
         if (is_null($this->embed)) {
-            $this->get();
+            $this->_get();
             $this->embed = (isset($this->get['embed'])) ? explode(',', $this->get['embed']) : [];
         }
 
@@ -144,7 +148,7 @@ trait TraitRequest
     public function offset()
     {
         if (is_null($this->offset)) {
-            $this->get();
+            $this->_get();
             $this->offset = (isset($this->get['offset'])) ? (int) $this->get['offset'] : $this->defaultOffset;
         }
 
@@ -160,7 +164,7 @@ trait TraitRequest
     public function sort()
     {
         if (is_null($this->sort)) {
-            $this->get();
+            $this->_get();
             $this->sort = [];
 
             $sort = [];
@@ -202,7 +206,7 @@ trait TraitRequest
     public function search()
     {
         if (is_null($this->search)) {
-            $this->get();
+            $this->_get();
             $this->search = (isset($this->get['q'])) ? $this->get['q'] : '';
         }
 
@@ -219,7 +223,7 @@ trait TraitRequest
     public function filter()
     {
         $exclude = array ('page', 'offset', 'sort', 'q', 'embed');
-        $get = array_diff($this->get(), $exclude);
+        $get = array_diff($this->_get(), $exclude);
 
         foreach ($get as $field => $rules) {
             $get[$field] = $this->filterOrganize($rules);

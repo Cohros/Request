@@ -79,28 +79,97 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Asdrubal', $this->object->search());
     }
 
-    public function testFilters()
+    public function testSimpleFilter()
     {
         $_GET = array (
-            'genre' => 'rock',
-            'year' => '2000,2001,2002',
-            'tracks' => '>6,<10,!8',
-            'sherpa' => null
+            'color' => 'red',
         );
-        $this->assertEquals(array(
-            'genre' => array(
-                array('=', 'rock')
-            ),
-            'year' => array(
-                array('=', '2000'),
-                array('=', '2001'),
-                array('=', '2002'),
-            ),
-            'tracks' => array (
-                array ('>', '6'),
-                array ('<', '10'),
-                array ('NOT', '8'),
+
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => ['red'],
             )
+        ), $this->object->filter());
+    }
+
+    public function testMultipleFilter()
+    {
+        $_GET = array (
+            'color' => 'red',
+            'size' => '16',
+        );
+
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => ['red'],
+            ),
+            'size' => array (
+                '=' => ['16']
+            ),
+        ), $this->object->filter());
+    }
+
+    public function testFilterOr()
+    {
+        $_GET = array (
+            'color' => 'red;green;blue',
+        );
+
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => array (
+                    'red',
+                    'green',
+                    'blue',
+                ),
+            ),
+        ), $this->object->filter());
+    }
+
+    public function testFilterAND()
+    {
+        $_GET = array (
+            'size' => '!16,!18,!19'
+        );
+
+        $this->assertEquals(array (
+            'size' => array (
+                'and' => array (
+                    'NOT' => ['16', '18', '19'],
+                ),
+            ),
+        ), $this->object->filter());
+    }
+
+    public function testBetweenFilter()
+    {
+        $_GET = array (
+            'size' => '+16,-25',
+        );
+
+        $this->assertEquals(array (
+            'size' => array (
+                'and' => array (
+                    '>' => ['16'],
+                    '<' => ['25'],
+                ),
+            ),
+        ), $this->object->filter());
+    }
+
+    public function testBetweenFilterInclusive()
+    {
+        $_GET = array (
+            'size' => '16+,25-',
+        );
+
+        $this->assertEquals(array (
+            'size' => array (
+                'and' => array (
+                    '>=' => ['16'],
+                    '<=' => ['25'],
+                ),
+            ),
         ), $this->object->filter());
     }
 

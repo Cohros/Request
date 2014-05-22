@@ -144,7 +144,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     public function testBetweenFilter()
     {
         $_GET = array (
-            'size' => '+16,-25',
+            'size' => '>16,<25',
         );
 
         $this->assertEquals(array (
@@ -160,7 +160,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     public function testBetweenFilterInclusive()
     {
         $_GET = array (
-            'size' => '16+,25-',
+            'size' => '16>,25<',
         );
 
         $this->assertEquals(array (
@@ -170,6 +170,29 @@ class RequestTest extends \PHPUnit_Framework_TestCase
                     '<=' => ['25'],
                 ),
             ),
+        ), $this->object->filter());
+    }
+
+    public function testFilterEmpty()
+    {
+        $_GET = array (
+            'size' => '',
+        );
+
+        $this->assertEquals(array (
+        ), $this->object->filter());
+    }
+
+    public function testFilterNull()
+    {
+        $_GET = array (
+            'size' => 'NULL',
+        );
+
+        $this->assertEquals(array (
+            'size' => array (
+                '=' => null,
+            )
         ), $this->object->filter());
     }
 

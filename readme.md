@@ -141,9 +141,9 @@ Filters allow you to filter the results based on its properties.
 Examples:
 ```
 GET /user?gender=female
-GET /user?age=+20&gender=female
-GET /user?age=+20,-30
-GET /users?age=20+,30-
+GET /user?age=>20&gender=female
+GET /user?age=>20,<30
+GET /users?age=20>,30<
 GET /users?age=20;30
 ```
 

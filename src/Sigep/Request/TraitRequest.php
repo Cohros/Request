@@ -227,11 +227,12 @@ trait TraitRequest
 
         foreach ($get as $field => $rules) {
             $get[$field] = $this->filterOrganize($rules);
+            if (empty($get[$field])) {
+                unset($get[$field]);
+            }
         }
 
         return $get;
-        // organizar ands e ors
-        // agrupar operadores
     }
 
     private function filterOrganize($rules)
@@ -245,11 +246,15 @@ trait TraitRequest
             $rule = explode(',', $rule);
 
             if (count($rule) == 1) {
-                $operator = $this->extractFilterOperator($rule[0]);
-                if (!isset($response[$operator['operator']])) {
-                    $response[$operator['operator']] = array();
+                if ($rule[0] === 'NULL') {
+                    $response['='] = null;
+                } elseif ($rule[0] !== '') {
+                    $operator = $this->extractFilterOperator($rule[0]);
+                    if (!isset($response[$operator['operator']])) {
+                        $response[$operator['operator']] = array();
+                    }
+                    $response[$operator['operator']][] = $operator['value'];
                 }
-                $response[$operator['operator']][] = $operator['value'];
             } else {
                 foreach ($rule as $piece) {
                     $operator = $this->extractFilterOperator($piece);
@@ -306,7 +311,7 @@ trait TraitRequest
      */
     private function testFilterBiggerThan($value)
     {
-        if ($value[0] == '+' || $value[0] == '>') {
+        if ($value[0] == '>') {
             return substr($value, 1);
         }
     }
@@ -331,7 +336,7 @@ trait TraitRequest
      */
     private function testFilterSmallerThan($value)
     {
-        if ($value[0] == '-' || $value[0] == '<') {
+        if ($value[0] == '<') {
             return substr($value, 1);
         }
     }

@@ -222,8 +222,8 @@ trait TraitRequest
      */
     public function filter()
     {
-        $exclude = array ('page', 'offset', 'sort', 'q', 'embed');
-        $get = array_diff($this->_get(), $exclude);
+        $exclude = array_flip(['page', 'offset', 'sort', 'q', 'embed']);
+        $get = array_diff_key($this->_get(), $exclude);
 
         foreach ($get as $field => $rules) {
             $get[$field] = $this->filterOrganize($rules);

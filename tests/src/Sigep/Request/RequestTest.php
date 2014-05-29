@@ -196,6 +196,27 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         ), $this->object->filter());
     }
 
+    public function testExclusions()
+    {
+        $_GET = array (
+            'size' => '>10,<20',
+            'q' => 'sherpa',
+            'sort' => 'name',
+            'page' => 1,
+            'offset' => 20,
+            'embed' => 40,
+        );
+
+        $this->assertEquals(array (
+            'size' => array (
+                'and' => array (
+                    '>' => array(10),
+                    '<' => array(20),
+                ),
+            ),
+        ), $this->object->filter());
+    }
+
     /**
      * @expectedException InvalidArgumentException
      */

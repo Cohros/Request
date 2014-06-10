@@ -290,25 +290,25 @@ trait TraitRequest
         $operator = ($operator == 'OR') ? ';' : (($operator == 'AND') ? ',' : ';' );
 
         switch($type) {
-        case 'replace': // Replace in array
-            $this->get = array_replace($this->get, $array);
-            break;
-        case 'add': // Add on array
-            foreach ($array as $key => $value) {
-                // If exists
-                if (array_key_exists($key, $this->get)) {
-                    // Old value in original array.
-                    $old = $this->get[$key];
-                    // Push in original array.
-                    $this->get[$key] = $old . $operator . $value;
-                } else {
-                    $this->get[$key] = $value;
+            case 'replace': // Replace in array
+                $this->get = array_replace($this->get, $array);
+                break;
+            case 'add': // Add on array
+                foreach ($array as $key => $value) {
+                    // If exists
+                    if (array_key_exists($key, $this->get)) {
+                        // Old value in original array.
+                        $old = $this->get[$key];
+                        // Push in original array.
+                        $this->get[$key] = $old . $operator . $value;
+                    } else {
+                        $this->get[$key] = $value;
+                    }
                 }
-            }
-            break;
-        default:
-            // Do nothing...
-            break;
+                break;
+            default:
+                // Do nothing...
+                break;
         }
     }
 

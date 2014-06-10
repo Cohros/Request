@@ -274,6 +274,45 @@ trait TraitRequest
     }
 
     /**
+     * set function
+     * Method to set an array in GET.
+     * @param $type string (with the type)
+     * @param $array array (With the values)
+     * @param $operator string (with the operator)
+     * @return void
+     * @author Juarez Turrini <juarez.turrini@gmail.com>
+     */
+    public function set($type, $array, $operator = 'OR')
+    {
+        $this->_get();
+
+        // Checking the operator type
+        $operator = ($operator == 'OR') ? ';' : (($operator == 'AND') ? ',' : ';' );
+
+        switch($type) {
+        case 'replace': // Replace in array
+            $this->get = array_replace($this->get, $array);
+            break;
+        case 'add': // Add on array
+            foreach ($array as $key => $value) {
+                // If exists
+                if (array_key_exists($key, $this->get)) {
+                    // Old value in original array.
+                    $old = $this->get[$key];
+                    // Push in original array.
+                    $this->get[$key] = $old . $operator . $value;
+                } else {
+                    $this->get[$key] = $value;
+                }
+            }
+            break;
+        default:
+            // Do nothing...
+            break;
+        }
+    }
+
+    /**
      * Search for operators in $value (>, <, +, etc)
      * @param  string $value
      * @return array  associative array with operator and cleaned value

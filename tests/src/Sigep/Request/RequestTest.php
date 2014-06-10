@@ -217,6 +217,80 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         ), $this->object->filter());
     }
 
+    public function testReplaceFilter()
+    {
+        $_GET = array (
+            'name' => 'luis'
+        );
+
+        $this->object->set('replace', array ('name' => ''));
+
+        $this->assertEquals(array (
+        ), $this->object->filter());
+    }
+
+    public function testAddFilterAND()
+    {
+        $_GET = array(
+            'color' => 'blue',
+        );
+
+        $this->object->set('add', array('color' => 'white'), 'AND');
+        $this->assertEquals(array (
+            'color' => array (
+                'and' => array(
+                    '=' => ['blue', 'white']
+                )
+            )
+        ), $this->object->filter());
+    }
+
+    public function testAddFilterOR()
+    {
+        $_GET = array(
+            'color' => 'green',
+        );
+
+        $this->object->set('add', array('color' => 'purple'));
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => ['green', 'purple']
+            )
+        ), $this->object->filter());
+    }
+
+    public function testAddDiffKey ()
+    {
+        $_GET = array(
+            'color' => 'green',
+        );
+
+        $this->object->set('add', array('id' => 15));
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => ['green']
+            ),
+            'id'    => array(
+                '=' => [15]
+            )
+        ), $this->object->filter());
+    }
+
+    public function testSetTypeEmpty ()
+    {
+        $_GET = array(
+            'color' => 'green',
+        );
+
+        $this->object->set('', array('id' => 15));
+        $this->assertEquals(array (
+            'color' => array (
+                '=' => ['green']
+            )
+        ), $this->object->filter());
+    }
+
+
     /**
      * @expectedException InvalidArgumentException
      */

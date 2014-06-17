@@ -66,7 +66,7 @@ trait TraitRequest
     protected function _get()
     {
         if (is_null($this->get)) {
-            $this->get = filter_var_array((array) $_GET, FILTER_SANITIZE_URL);
+            $this->get = $_GET;
         }
 
         return $this->get;

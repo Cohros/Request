@@ -306,4 +306,25 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     {
         $this->object->setDefaultOffset('a');
     }
+
+    public function testShouldShouldConvertColonToDot()
+    {
+        $_GET = array (
+            'embed' => 'city,city:state',
+            'city:city_geoname_id' => '333',
+            'sort' => 'name,-city:state',
+        );
+
+        $this->assertEquals(array (
+            'city', 'city.state',
+        ), $this->object->embed());
+
+        $this->assertEquals(array (
+            'city.city_geoname_id' => ['=' => ['333']]
+        ), $this->object->filter());
+        $this->assertEquals(array(
+            'name' => 'ASC',
+            'city.state' => 'DESC',
+        ), $this->object->sort());
+    }
 }

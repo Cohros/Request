@@ -134,6 +134,10 @@ trait TraitRequest
         if (is_null($this->embed)) {
             $this->_get();
             $this->embed = (isset($this->get['embed'])) ? explode(',', $this->get['embed']) : [];
+
+            $this->embed = array_map(function ($element) {
+                return strtr($element, ':', '.');
+            }, $this->embed);
         }
 
         return $this->embed;
@@ -174,6 +178,7 @@ trait TraitRequest
             
             foreach ($sort as $field) {
                 $field = $this->defineSortDirection($field);
+                $field['value'] = strtr($field['value'], ':', '.');
 
                 $this->sort[$field['value']] = $field['direction'];
             }
@@ -224,15 +229,16 @@ trait TraitRequest
     {
         $exclude = array_flip(['page', 'offset', 'sort', 'q', 'embed']);
         $get = array_diff_key($this->_get(), $exclude);
-
+        $response = [];
         foreach ($get as $field => $rules) {
-            $get[$field] = $this->filterOrganize($rules);
-            if (empty($get[$field])) {
-                unset($get[$field]);
+            $field = strtr($field, ':', '.');
+            $response[$field] = $this->filterOrganize($rules);
+            if (empty($response[$field])) {
+                unset($response[$field]);
             }
         }
 
-        return $get;
+        return $response;
     }
 
     private function filterOrganize($rules)

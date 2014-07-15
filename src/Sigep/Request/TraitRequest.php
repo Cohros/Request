@@ -133,7 +133,11 @@ trait TraitRequest
     {
         if (is_null($this->embed)) {
             $this->_get();
-            $this->embed = (isset($this->get['embed'])) ? explode(',', $this->get['embed']) : [];
+            $this->embed = (isset($this->get['embed'])) ? $this->get['embed'] : [];
+
+            if (is_string($this->embed)) {
+                $this->embed = explode(',', $this->embed);
+            }
 
             $this->embed = array_map(function ($element) {
                 return strtr($element, ':', '.');
@@ -173,7 +177,11 @@ trait TraitRequest
 
             $sort = [];
             if (!empty($this->get['sort'])) {
-                $sort = explode(',', $this->get['sort']);
+                $sort = $this->get['sort'];
+            }
+
+            if (is_string($sort)) {
+                $sort = explode(',', $sort);
             }
             
             foreach ($sort as $field) {
@@ -243,13 +251,18 @@ trait TraitRequest
 
     private function filterOrganize($rules)
     {
-        $rules = explode(';', $rules);
+        if (!is_array($rules)) {
+            $rules = explode(';', $rules);
+        }
+
         $response = array (
             'and' => array(),
         );
 
         foreach ($rules as $rule) {
-            $rule = explode(',', $rule);
+            if (is_string($rule)) {
+                $rule = explode(',', $rule);
+            }
 
             if (count($rule) == 1) {
                 if ($rule[0] === 'NULL') {

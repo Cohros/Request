@@ -327,4 +327,23 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             'city.state' => 'DESC',
         ), $this->object->sort());
     }
+
+    public function testEverythingShouldWorksWhenQuerystringEnvolvsArrays()
+    {
+        $_GET = array (
+            'embed' => ['modela', 'modelb'],
+            'sort' => ['columna', '-columnb'],
+            'color' => ['red', 'green', 'blue'],
+        );
+
+        $this->assertEquals(['modela', 'modelb'], $this->object->embed());
+        $this->assertEquals(['columna' => 'ASC', 'columnb' => 'DESC'], $this->object->sort());
+        $this->assertEquals(['color' => array (
+            '=' => array (
+                'red',
+                'green',
+                'blue',
+            ),
+        )], $this->object->filter());
+    }
 }

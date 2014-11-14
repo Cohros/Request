@@ -426,7 +426,15 @@ trait TraitRequest
 
     public function refresh($newData = null)
     {
+        $this->paginate = null;
+        $this->page = null;
+        $this->offset = null;
+        $this->embed = null;
+        $this->sort = null;
+        $this->search = null;
+        $this->filter = null;
         $this->get = $newData;
+        
         $this->_get();
     }
 }

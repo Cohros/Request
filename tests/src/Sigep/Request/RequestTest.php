@@ -8,12 +8,12 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        $_GET = [];
         $this->object = new Request;
     }
 
     public function testCleanRequest()
     {
-        $_GET = [];
         $this->assertEquals(false, $this->object->paginate());
         $this->assertEquals(1, $this->object->page());
         $this->assertEquals($this->object->getDefaultOffset(), $this->object->offset());
@@ -349,14 +349,16 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetOriginalGETData()
     {
-        $_GET = ['city' => 'city a'];
+        $_GET = ['city' => 'city a', 'page' => 1];
         $this->object->set('add', ['city' => 'city b']);
         $this->assertEquals(['city' => ['=' => ['city a', 'city b']]], $this->object->filter());
+        $this->assertTrue($this->object->paginate());
 
         $this->object->refresh();
         $this->assertEquals(['city' => ['=' => ['city a']]], $this->object->filter());
 
         $this->object->refresh(['city' => 'city a;city b']);
         $this->assertEquals(['city' => ['=' => ['city a', 'city b']]], $this->object->filter());
+        $this->assertFalse($this->object->paginate());
     }
 }

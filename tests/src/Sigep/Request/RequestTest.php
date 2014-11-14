@@ -355,5 +355,8 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
         $this->object->refresh();
         $this->assertEquals(['city' => ['=' => ['city a']]], $this->object->filter());
+
+        $this->object->refresh(['city' => 'city a;city b']);
+        $this->assertEquals(['city' => ['=' => ['city a', 'city b']]], $this->object->filter());
     }
 }

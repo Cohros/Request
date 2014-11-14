@@ -424,9 +424,9 @@ trait TraitRequest
         }
     }
 
-    public function refresh()
+    public function refresh($newData = null)
     {
-        $this->get = null;
+        $this->get = $newData;
         $this->_get();
     }
 }

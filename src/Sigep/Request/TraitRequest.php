@@ -423,4 +423,10 @@ trait TraitRequest
             return substr($value, 1);
         }
     }
+
+    public function refresh()
+    {
+        $this->get = null;
+        $this->_get();
+    }
 }

@@ -346,4 +346,14 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             ),
         )], $this->object->filter());
     }
+
+    public function testShouldGetOriginalGETData()
+    {
+        $_GET = ['city' => 'city a'];
+        $this->object->set('add', ['city' => 'city b']);
+        $this->assertEquals(['city' => ['=' => ['city a', 'city b']]], $this->object->filter());
+
+        $this->object->refresh();
+        $this->assertEquals(['city' => ['=' => ['city a']]], $this->object->filter());
+    }
 }

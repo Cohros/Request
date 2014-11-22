@@ -1,6 +1,8 @@
 {
     "name": "sigep/request",
-    "description": "",
+    "description": "Utility for parse querystring",
+    "type": "library",
+    "license": "MIT",
     "authors": [
         {
             "name": "Luís Henrique",

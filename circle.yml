@@ -1,0 +1,12 @@
+machine:
+    php:
+        version: 5.5.9
+
+dependencies:
+    override:
+        - sudo composer self-update
+        - composer install --no-interaction
+
+test:
+  override:
+    - vendor/bin/phpunit --coverage-html $CIRCLE_ARTIFACTS

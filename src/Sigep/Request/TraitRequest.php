@@ -2,6 +2,8 @@
 
 namespace Sigep\Request;
 
+use InvalidArgumentException;
+
 trait TraitRequest
 {
     /**
@@ -57,12 +59,33 @@ trait TraitRequest
      * @var array
      */
     protected $get = null;
+    
+    /**
+     * Determines if sort is ASC or DESC
+     * @param $value string
+     * @return array
+     */
+    private function defineSortDirection($value)
+    {
+        $value = (string) $value;
+        $direction = 'ASC';
+
+        if ($value[0] === '-') {
+            $value = substr($value, 1);
+            $direction = 'DESC';
+        }
+
+        return array(
+            'value'     => $value,
+            'direction' => $direction,
+        );
+    }
 
     /**
      * filter $_GET
      * @return array
      */
-    protected function _get()
+    protected function parseQueryString()
     {
         if (is_null($this->get)) {
             $this->get = $_GET;
@@ -88,7 +111,7 @@ trait TraitRequest
     public function setDefaultOffset($offset)
     {
         if (!is_int($offset) || !$offset) {
-            throw new \InvalidArgumentException('offset MUST be int');
+            throw new InvalidArgumentException('offset MUST be int and bigger than 0');
         }
 
         $this->defaultOffset = $offset;
@@ -101,7 +124,7 @@ trait TraitRequest
     public function paginate()
     {
         if (is_null($this->paginate)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->paginate = (isset($this->get['page']));
         }
 
@@ -109,14 +132,14 @@ trait TraitRequest
     }
 
     /**
-     * Get page requested
+     * Get requested page number
      * ?page=X
      * @return mixed page number or null
      */
     public function page()
     {
         if (is_null($this->page)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->page = (isset($this->get['page'])) ? (int) $this->get['page'] : 1;
         }
 
@@ -131,7 +154,7 @@ trait TraitRequest
     public function embed()
     {
         if (is_null($this->embed)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->embed = (isset($this->get['embed'])) ? $this->get['embed'] : [];
 
             if (is_string($this->embed)) {
@@ -155,7 +178,7 @@ trait TraitRequest
     public function offset()
     {
         if (is_null($this->offset)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->offset = (isset($this->get['offset'])) ? (int) $this->get['offset'] : $this->defaultOffset;
         }
 
@@ -171,7 +194,7 @@ trait TraitRequest
     public function sort()
     {
         if (is_null($this->sort)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->sort = [];
 
             $sort = [];
@@ -182,7 +205,7 @@ trait TraitRequest
             if (is_string($sort)) {
                 $sort = explode(',', $sort);
             }
-            
+
             foreach ($sort as $field) {
                 $field = $this->defineSortDirection($field);
                 $field['value'] = strtr($field['value'], ':', '.');
@@ -195,27 +218,6 @@ trait TraitRequest
     }
 
     /**
-     * Determines if sort is ASC or DESC
-     * @param $value string
-     * @return array
-     */
-    private function defineSortDirection($value)
-    {
-        $value = (string) $value;
-        $direction = 'ASC';
-
-        if ($value[0] === '-') {
-            $value = substr($value, 1);
-            $direction = 'DESC';
-        }
-
-        return array (
-            'value' => $value,
-            'direction' => $direction,
-        );
-    }
-
-    /**
      * Get search query
      * ?q=hello word
      * @return string
@@ -223,7 +225,7 @@ trait TraitRequest
     public function search()
     {
         if (is_null($this->search)) {
-            $this->_get();
+            $this->parseQueryString();
             $this->search = (isset($this->get['q'])) ? $this->get['q'] : '';
         }
 
@@ -240,11 +242,12 @@ trait TraitRequest
     public function filter()
     {
         $exclude = array_flip(['page', 'offset', 'sort', 'q', 'embed']);
-        $get = array_diff_key($this->_get(), $exclude);
+        $get = array_diff_key($this->parseQueryString(), $exclude);
         $response = [];
+
         foreach ($get as $field => $rules) {
             $field = strtr($field, ':', '.');
-            $response[$field] = $this->filterOrganize($rules);
+            $response[$field] = $this->getFilters($rules);
             if (empty($response[$field])) {
                 unset($response[$field]);
             }
@@ -254,43 +257,31 @@ trait TraitRequest
     }
 
     /**
+     * Get filters config
      * @param $rules mixed
      * @return array
      */
-    private function filterOrganize($rules)
+    private function getFilters($rules)
     {
         if (!is_array($rules)) {
             $rules = explode(';', $rules);
         }
 
-        $response = array (
+        $response = array(
             'and' => array(),
         );
 
         foreach ($rules as $rule) {
-            if (is_string($rule)) {
-                $rule = explode(',', $rule);
-            }
-
-            if (count($rule) == 1) {
-                if ($rule[0] === 'NULL') {
-                    $response['='] = null;
-                } elseif ($rule[0] !== '') {
-                    $operator = $this->extractFilterOperator($rule[0]);
-                    if (!isset($response[$operator['operator']])) {
-                        $response[$operator['operator']] = array();
-                    }
-                    $response[$operator['operator']][] = $operator['value'];
-                }
+            $rule = explode(',', $rule);
+            
+            if (count($rule) === 1) {
+                $pointer = &$response;
             } else {
-                foreach ($rule as $piece) {
-                    $operator = $this->extractFilterOperator($piece);
-                    if (!isset($response['and'][$operator['operator']])) {
-                        $response['and'][$operator['operator']] = array();
-                    }
-                    $response['and'][$operator['operator']][] = $operator['value'];
-                }
+                $pointer = &$response['and'];
             }
+            
+            $this->extractFilterConfig($pointer, $rule);
+            unset($pointer);
         }
 
         if (empty($response['and'])) {
@@ -298,6 +289,31 @@ trait TraitRequest
         }
 
         return $response;
+    }
+    
+    /**
+     * Extract configs of filter
+     * @param array $pointer
+     * @param array $rules
+     */
+    private function extractFilterConfig(array &$pointer, array $rules)
+    {    
+        foreach ($rules as $rule) {
+            if ($rule === '') {
+                continue;
+            }
+
+            if ($rule === 'NULL') {
+                $pointer['='] = null;
+                continue;
+            }
+
+            $operator = $this->extractFilterOperator($rule);
+            if (!isset($pointer[$operator['operator']])) {
+                $pointer[$operator['operator']] = array();
+            }
+            $pointer[$operator['operator']][] = $operator['value'];
+        }
     }
 
     /**
@@ -308,17 +324,15 @@ trait TraitRequest
      */
     public function set($type, $array, $operator = 'OR')
     {
-        $this->_get();
-
-        // Checking the operator type
-        $operator = ($operator == 'OR') ? ';' : (($operator == 'AND') ? ',' : ';' );
+        $this->parseQueryString();
+        $operatorSeparator = ($operator === 'AND') ? ',' : ';';
 
         if ($type === 'replace') {
             $this->get = array_replace($this->get, $array);
         } elseif ($type === 'add') {
             foreach ($array as $key => $value) {
                 if (isset($this->get[$key])) {
-                    $this->get[$key] .= $operator . $value;
+                    $this->get[$key] .= $operatorSeparator . $value;
                 } else {
                     $this->get[$key] = $value;
                 }
@@ -333,28 +347,29 @@ trait TraitRequest
      */
     private function extractFilterOperator($value)
     {
-        $tests = array (
-            'testFilterBiggerThan' => '>',
-            'testFilterBiggerOrEqualsThan' => '>=',
-            'testFilterSmallerThan' => '<',
+        $tests = array(
+            'testFilterBiggerThan'          => '>',
+            'testFilterBiggerOrEqualsThan'  => '>=',
+            'testFilterSmallerThan'         => '<',
             'testFilterSmallerOrEqualsThan' => '<=',
-            'testFilterNotEqualThan' => 'NOT',
+            'testFilterNotEqualThan'        => 'NOT',
+        );
+        
+        $response = array (
+            'operator' => '=',
+            'value' => $value,
         );
 
         foreach ($tests as $test => $operator) {
             $result = $this->{$test}($value);
             if (!is_null($result)) {
-                return array (
-                    'operator' => $operator,
-                    'value' => $result,
-                );
+                $response['operator'] = $operator;
+                $response['value'] = $result;
+                break;
             }
         }
 
-        return array (
-            'operator' => '=',
-            'value' => $value
-        );
+        return $response;
     }
 
     /**
@@ -364,7 +379,7 @@ trait TraitRequest
      */
     private function testFilterBiggerThan($value)
     {
-        if ($value[0] == '>') {
+        if ($value[0] === '>') {
             return substr($value, 1);
         }
     }
@@ -377,7 +392,7 @@ trait TraitRequest
     private function testFilterBiggerOrEqualsThan($value)
     {
         $lastChar = $value[strlen($value) - 1];
-        if ($lastChar == '+' || $lastChar== '>') {
+        if ($lastChar === '+' || $lastChar === '>') {
             return substr($value, 0, strlen($value) - 1);
         }
     }
@@ -389,7 +404,7 @@ trait TraitRequest
      */
     private function testFilterSmallerThan($value)
     {
-        if ($value[0] == '<') {
+        if ($value[0] === '<') {
             return substr($value, 1);
         }
     }
@@ -402,7 +417,7 @@ trait TraitRequest
     private function testFilterSmallerOrEqualsThan($value)
     {
         $lastChar = $value[strlen($value) - 1];
-        if ($lastChar == '-' || $lastChar== '<') {
+        if ($lastChar === '-' || $lastChar === '<') {
             return substr($value, 0, strlen($value) - 1);
         }
     }
@@ -414,7 +429,7 @@ trait TraitRequest
      */
     private function testFilterNotEqualThan($value)
     {
-        if ($value[0] == '!') {
+        if ($value[0] === '!') {
             return substr($value, 1);
         }
     }
@@ -429,7 +444,5 @@ trait TraitRequest
         $this->search = null;
         $this->filter = null;
         $this->get = $newData;
-        
-        $this->_get();
     }
 }

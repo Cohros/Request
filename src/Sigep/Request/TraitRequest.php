@@ -18,14 +18,13 @@ trait TraitRequest
 
     /**
      * Number of items per page
-     * a default value
      * @var int
      */
     protected $offset = null;
 
     /**
      * The default value when offset is not set
-     * @var bool
+     * @var int
      */
     protected $defaultOffset = 15;
 
@@ -54,14 +53,14 @@ trait TraitRequest
     protected $filter = null;
 
     /**
-     * $_GET
+     * raw $_GET
      * @var array
      */
     protected $get = null;
 
     /**
      * filter $_GET
-     * @return [type] [description]
+     * @return array
      */
     protected function _get()
     {
@@ -195,6 +194,11 @@ trait TraitRequest
         return $this->sort;
     }
 
+    /**
+     * Determines if sort is ASC or DESC
+     * @param $value string
+     * @return array
+     */
     private function defineSortDirection($value)
     {
         $value = (string) $value;
@@ -249,6 +253,10 @@ trait TraitRequest
         return $response;
     }
 
+    /**
+     * @param $rules mixed
+     * @return array
+     */
     private function filterOrganize($rules)
     {
         if (!is_array($rules)) {
@@ -293,13 +301,10 @@ trait TraitRequest
     }
 
     /**
-     * set function
-     * Method to set an array in GET.
-     * @param $type string (with the type)
-     * @param $array array (With the values)
-     * @param $operator string (with the operator)
-     * @return void
-     * @author Juarez Turrini <juarez.turrini@gmail.com>
+     * Add or replace request parameters
+     * @param $type string type of operation. Can be add or replace
+     * @param $array array associative array with parameter name and value
+     * @param $operator string
      */
     public function set($type, $array, $operator = 'OR')
     {
@@ -308,33 +313,23 @@ trait TraitRequest
         // Checking the operator type
         $operator = ($operator == 'OR') ? ';' : (($operator == 'AND') ? ',' : ';' );
 
-        switch($type) {
-            case 'replace': // Replace in array
-                $this->get = array_replace($this->get, $array);
-                break;
-            case 'add': // Add on array
-                foreach ($array as $key => $value) {
-                    // If exists
-                    if (array_key_exists($key, $this->get)) {
-                        // Old value in original array.
-                        $old = $this->get[$key];
-                        // Push in original array.
-                        $this->get[$key] = $old . $operator . $value;
-                    } else {
-                        $this->get[$key] = $value;
-                    }
+        if ($type === 'replace') {
+            $this->get = array_replace($this->get, $array);
+        } elseif ($type === 'add') {
+            foreach ($array as $key => $value) {
+                if (isset($this->get[$key])) {
+                    $this->get[$key] .= $operator . $value;
+                } else {
+                    $this->get[$key] = $value;
                 }
-                break;
-            default:
-                // Do nothing...
-                break;
+            }
         }
     }
 
     /**
      * Search for operators in $value (>, <, +, etc)
-     * @param  string $value
-     * @return array  associative array with operator and cleaned value
+     * @param $value string
+     * @return array associative array with operator and cleaned value
      */
     private function extractFilterOperator($value)
     {

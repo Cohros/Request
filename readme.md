@@ -13,12 +13,12 @@ Add the repository and declare the dependency in your `composer.json`.
         [...]
         {
             "type": "git",
-            "url": "git@bitbucket.org:beeblebrox3/Request.git"
+            "url": "git@github.com:Cohros/Request.git"
         }
     ],
     "require": {
         [...]
-        "beeblebrox3/Request": "0.2.0"
+        "sigep/request": "*"
     },
 }
 ```

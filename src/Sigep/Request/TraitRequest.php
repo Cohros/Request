@@ -117,6 +117,22 @@ trait TraitRequest
         $this->defaultOffset = $offset;
     }
 
+    public function params($forceRefresh = false) {
+        $data = array();
+        
+        if ($forceRefresh) $this->refresh($this->get);
+        
+        $data['paginate']   = $this->paginate();
+        $data['page']       = $this->page();
+        $data['offset']     = $this->offset();
+        $data['filter']     = $this->filter();
+        $data['embed']      = $this->embed();
+        $data['sort']       = $this->sort();
+        $data['search']     = $this->search();
+
+        return $data;
+    }
+
     /**
      * Determine if request wants paginated data
      * @return bool
@@ -161,9 +177,9 @@ trait TraitRequest
                 $this->embed = explode(',', $this->embed);
             }
 
-            $this->embed = array_map(function ($element) {
+            $this->embed = array_unique(array_map(function ($element) {
                 return strtr($element, ':', '.');
-            }, $this->embed);
+            }, $this->embed));
         }
 
         return $this->embed;
@@ -297,7 +313,7 @@ trait TraitRequest
      * @param array $rules
      */
     private function extractFilterConfig(array &$pointer, array $rules)
-    {    
+    {
         foreach ($rules as $rule) {
             if ($rule === '') {
                 continue;
@@ -319,7 +335,7 @@ trait TraitRequest
     /**
      * Add or replace request parameters
      * @param $type string type of operation. Can be add or replace
-     * @param $array array associative array with parameter name and value
+     * @param $array array associative array with parameter name and value, where value must be a string
      * @param $operator string
      */
     public function set($type, $array, $operator = 'OR')
@@ -338,6 +354,8 @@ trait TraitRequest
                 }
             }
         }
+
+        $this->refresh($this->get);
     }
 
     /**

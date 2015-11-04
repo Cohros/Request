@@ -223,7 +223,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             'name' => 'luis'
         );
 
-        $this->object->set('replace', array ('name' => ''));
+        $this->object->set('replace', array ('name' => ''));    
 
         $this->assertEquals(array (
         ), $this->object->filter());

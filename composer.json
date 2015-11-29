@@ -5,12 +5,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Luís Henrique",
-            "email": "luish.faria@gmail.com"
-        },
-        {
-            "name": "Juarez Turrini",
-            "email": "juarez.turrini@gmail.com"
+            "name": "Cohros/Request Contributors",
+            "homepage": "https://github.com/Cohros/Request/graphs/contributors"
         }
     ],
     "require": {

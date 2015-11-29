@@ -54,6 +54,12 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $_GET['embed'] = 'author,comment';
         $this->assertEquals(array('author', 'comment'), $this->object->embed());
     }
+    
+    public function testEmbedAsArray()
+    {
+        $_GET['embed'] = ['author'];
+        $this->assertEquals($_GET['embed'], $this->object->embed());
+    }
 
     public function testUniqueSortAsc()
     {
@@ -244,7 +250,71 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             )
         ), $this->object->filter());
     }
-
+    
+    public function testReplaceEmbedString()
+    {
+        $_GET = array (
+            'embed' => 'user',
+        );
+        
+        $this->object->set('replace', array (
+            'embed' => 'city,state',
+        ));
+        
+        $this->assertEquals(
+            array('city', 'state'),
+            $this->object->embed()
+        );
+    }
+    
+    public function testReplaceEmbedStringUsingArray()
+    {
+        $_GET = array (
+            'embed' => 'user',
+        );
+        
+        $this->object->set('replace', array (
+            'embed' => array('city', 'state')
+        ));
+        
+        $this->assertEquals(
+            array('city', 'state'),
+            $this->object->embed()
+        );
+    }
+    
+    public function testReplaceEmbedStringMultiple()
+    {
+        $_GET = array (
+            'embed' => 'user,mother',
+        );
+        
+        $this->object->set('replace', array (
+            'embed' => 'city,state',
+        ));
+        
+        $this->assertEquals(
+            array('city', 'state'),
+            $this->object->embed()
+        );
+    }
+    
+    public function testReplaceEmbedStringMultipleUsingArray()
+    {
+        $_GET = array (
+            'embed' => 'user,mother',
+        );
+        
+        $this->object->set('replace', array (
+            'embed' => array('city', 'state')
+        ));
+        
+        $this->assertEquals(
+            array('city', 'state'),
+            $this->object->embed()
+        );
+    }
+    
     public function testAddFilterOR()
     {
         $_GET = array(

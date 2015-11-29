@@ -348,7 +348,8 @@ trait TraitRequest
         } elseif ($type === 'add') {
             foreach ($array as $key => $value) {
                 if (isset($this->get[$key])) {
-                    $this->get[$key] .= $operatorSeparator . $value;
+                    $separator = $key === "embed" ? "," : $operatorSeparator;
+                    $this->get[$key] .= $separator . $value;
                 } else {
                     $this->get[$key] = $value;
                 }

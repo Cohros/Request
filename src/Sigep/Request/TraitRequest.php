@@ -117,10 +117,17 @@ trait TraitRequest
         $this->defaultOffset = $offset;
     }
 
+    /**
+     * Return all params from querystring
+     * @param bool $forceRefresh if true, will discart any changes and get the original request data
+     * @return array with the keys paginage, page, offset, filter, embed, sort and search
+     */
     public function params($forceRefresh = false) {
         $data = array();
         
-        if ($forceRefresh) $this->refresh($this->get);
+        if ($forceRefresh) {
+            $this->refresh();
+        }
         
         $data['paginate']   = $this->paginate();
         $data['page']       = $this->page();
@@ -462,6 +469,7 @@ trait TraitRequest
         $this->sort = null;
         $this->search = null;
         $this->filter = null;
-        $this->get = $newData;
+        $this->get = null;
+        $this->get = $newData ?: $this->parseQueryString();
     }
 }

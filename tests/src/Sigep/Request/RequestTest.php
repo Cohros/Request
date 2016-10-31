@@ -3,7 +3,9 @@ namespace Sigep\Request;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
-
+    /**
+     * @var Request
+     */
     protected $object = null;
 
     public function setUp()
@@ -430,5 +432,46 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->object->refresh(['city' => 'city a;city b']);
         $this->assertEquals(['city' => ['=' => ['city a', 'city b']]], $this->object->filter());
         $this->assertFalse($this->object->paginate());
+    }
+
+    public function testShoudGetParams() {
+        $_GET = ['city' => 'city A'];
+        $this->assertEquals([
+            'paginate' => false,
+            'page' => 1,
+            'offset' => $this->object->getDefaultOffset(),
+            'filter' => [
+                'city' => ['=' => ['city A']]
+            ],
+            'embed' => [],
+            'sort' => [],
+            'search' => ''
+        ], $this->object->params());
+
+        $this->object->set('add', ['city' => 'city B']);
+        $this->assertEquals([
+            'paginate' => false,
+            'page' => 1,
+            'offset' => $this->object->getDefaultOffset(),
+            'filter' => [
+                'city' => ['=' => ['city A', 'city B']]
+            ],
+            'embed' => [],
+            'sort' => [],
+            'search' => ''
+        ], $this->object->params());
+
+        // passing true should discart changes made with 'set'
+        $this->assertEquals([
+            'paginate' => false,
+            'page' => 1,
+            'offset' => $this->object->getDefaultOffset(),
+            'filter' => [
+                'city' => ['=' => ['city A']]
+            ],
+            'embed' => [],
+            'sort' => [],
+            'search' => ''
+        ], $this->object->params(true));
     }
 }

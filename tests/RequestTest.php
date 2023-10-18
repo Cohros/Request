@@ -450,18 +450,5 @@ class RequestTest extends TestCase
             'sort' => [],
             'search' => ''
         ], $this->object->params());
-
-        // passing true should discart changes made with 'set'
-        $this->assertEquals([
-            'paginate' => false,
-            'page' => 1,
-            'offset' => $this->object->getDefaultOffset(),
-            'filter' => [
-                'city' => ['=' => ['city A']]
-            ],
-            'embed' => [],
-            'sort' => [],
-            'search' => ''
-        ], $this->object->params(true));
     }
 }

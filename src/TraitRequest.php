@@ -102,16 +102,11 @@ trait TraitRequest
 
     /**
      * Return all params from querystring
-     * @param bool $forceRefresh if true, will discart any changes and get the original request data
      * @return array with the keys paginage, page, offset, filter, embed, sort and search
      */
-    public function params(bool $forceRefresh = false): array
+    public function params(): array
     {
         $data = array();
-
-        if ($forceRefresh) {
-            $this->refresh();
-        }
 
         $data['paginate']   = $this->paginate();
         $data['page']       = $this->page();
@@ -271,10 +266,8 @@ trait TraitRequest
 
         foreach ($rules as $rule) {
             $rule = explode(',', $rule);
-
-            if (count($rule) === 1) {
-                $pointer = &$response;
-            } else {
+            $pointer = &$response;
+            if (count($rule) > 1) {
                 $pointer = &$response['and'];
             }
 
@@ -330,9 +323,10 @@ trait TraitRequest
                 if (isset($this->get[$key])) {
                     $separator = $key === "embed" ? "," : $operatorSeparator;
                     $this->get[$key] .= $separator . $value;
-                } else {
-                    $this->get[$key] = $value;
+                    break;
                 }
+
+                $this->get[$key] = $value;
             }
         }
 

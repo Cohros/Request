@@ -8,66 +8,54 @@ trait TraitRequest
 {
     /**
      * Indicates if request is paginated
-     * @var bool
      */
-    protected $paginate = null;
+    protected ?bool $paginate = null;
 
     /**
      * The current page
-     * @var int
      */
-    protected $page = null;
+    protected ?int $page = null;
 
     /**
      * Number of items per page
-     * @var int
      */
-    protected $offset = null;
+    protected ?int $offset = null;
 
     /**
      * The default value when offset is not set
-     * @var int
      */
-    protected $defaultOffset = 15;
+    protected int $defaultOffset = 15;
 
     /**
      * Identify which associations should be returned
-     * @var array
      */
-    protected $embed = null;
+    protected ?array $embed = null;
 
     /**
      * How results must be ordered
-     * @var array
      */
-    protected $sort = null;
+    protected ?array $sort = null;
 
     /**
      * Search query (textual)
-     * @var string
      */
-    protected $search = null;
+    protected ?string $search = null;
 
     /**
      * Filters: has fieldName, an operator and values to compare
-     * @var array
      */
-    protected $filter = null;
+    protected ?array $filter = null;
 
     /**
      * raw $_GET
-     * @var array
      */
-    protected $get = null;
-    
+    protected ?array $get = null;
+
     /**
      * Determines if sort is ASC or DESC
-     * @param $value string
-     * @return array
      */
-    private function defineSortDirection($value)
+    private function defineSortDirection(string $value): array
     {
-        $value = (string) $value;
         $direction = 'ASC';
 
         if ($value[0] === '-') {
@@ -75,17 +63,14 @@ trait TraitRequest
             $direction = 'DESC';
         }
 
-        return array(
-            'value'     => $value,
-            'direction' => $direction,
-        );
+        return compact('value', 'direction');
     }
 
     /**
      * filter $_GET
-     * @return array
+     * @SuppressWarnings(PHPMD.Superglobals) intentionally using $_GET
      */
-    protected function parseQueryString()
+    protected function parseQueryString(): array
     {
         if (is_null($this->get)) {
             $this->get = $_GET;
@@ -96,21 +81,19 @@ trait TraitRequest
 
     /**
      * return default offset
-     * @return int
      */
-    public function getDefaultOffset()
+    public function getDefaultOffset(): int
     {
         return $this->defaultOffset;
     }
 
     /**
      * set default offset
-     * @param int $offset
-     * @throws InvalidArgumentException If $offset is not int or != 0
+     * @throws InvalidArgumentException If $offset <= 0
      */
-    public function setDefaultOffset($offset)
+    public function setDefaultOffset(int $offset): void
     {
-        if (!is_int($offset) || !$offset) {
+        if (!$offset) {
             throw new InvalidArgumentException('offset MUST be int and bigger than 0');
         }
 
@@ -122,13 +105,14 @@ trait TraitRequest
      * @param bool $forceRefresh if true, will discart any changes and get the original request data
      * @return array with the keys paginage, page, offset, filter, embed, sort and search
      */
-    public function params($forceRefresh = false) {
+    public function params(bool $forceRefresh = false): array
+    {
         $data = array();
-        
+
         if ($forceRefresh) {
             $this->refresh();
         }
-        
+
         $data['paginate']   = $this->paginate();
         $data['page']       = $this->page();
         $data['offset']     = $this->offset();
@@ -142,9 +126,8 @@ trait TraitRequest
 
     /**
      * Determine if request wants paginated data
-     * @return bool
      */
-    public function paginate()
+    public function paginate(): bool
     {
         if (is_null($this->paginate)) {
             $this->parseQueryString();
@@ -157,9 +140,8 @@ trait TraitRequest
     /**
      * Get requested page number
      * ?page=X
-     * @return mixed page number or null
      */
-    public function page()
+    public function page(): ?int
     {
         if (is_null($this->page)) {
             $this->parseQueryString();
@@ -172,21 +154,20 @@ trait TraitRequest
     /**
      * Get name of associated data that should be returned
      * ?embed=a,b,c
-     * @return array
      */
-    public function embed()
+    public function embed(): array
     {
         if (is_null($this->embed)) {
             $this->parseQueryString();
-            $this->embed = (isset($this->get['embed'])) ? $this->get['embed'] : [];
+            $embedRaw = (isset($this->get['embed'])) ? $this->get['embed'] : [];
 
-            if (is_string($this->embed)) {
-                $this->embed = explode(',', $this->embed);
+            if (is_string($embedRaw)) {
+                $embedRaw = explode(',', $embedRaw);
             }
 
             $this->embed = array_unique(array_map(function ($element) {
                 return strtr($element, ':', '.');
-            }, $this->embed));
+            }, $embedRaw));
         }
 
         return $this->embed;
@@ -196,9 +177,8 @@ trait TraitRequest
      * Get offset of data to pagination of the request
      * If is not present in request, use the default value
      * ?offset=9
-     * @return int
      */
-    public function offset()
+    public function offset(): int
     {
         if (is_null($this->offset)) {
             $this->parseQueryString();
@@ -212,9 +192,8 @@ trait TraitRequest
      * Get rules to ordenate results
      * ?sort=field,field2
      * If the field name is preceded by a '-', the sort will be descending, otherwise ascending
-     * @return array
      */
-    public function sort()
+    public function sort(): array
     {
         if (is_null($this->sort)) {
             $this->parseQueryString();
@@ -243,9 +222,8 @@ trait TraitRequest
     /**
      * Get search query
      * ?q=hello word
-     * @return string
      */
-    public function search()
+    public function search(): string
     {
         if (is_null($this->search)) {
             $this->parseQueryString();
@@ -260,9 +238,8 @@ trait TraitRequest
      * ?field=value
      * The default operator is '=' and it can be changed preceding the value
      * with a special character. Supported are '-', '+', and '!'.
-     * @return array
      */
-    public function filter()
+    public function filter(): array
     {
         $exclude = array_flip(['page', 'offset', 'sort', 'q', 'embed']);
         $get = array_diff_key($this->parseQueryString(), $exclude);
@@ -281,10 +258,8 @@ trait TraitRequest
 
     /**
      * Get filters config
-     * @param $rules mixed
-     * @return array
      */
-    private function getFilters($rules)
+    private function getFilters(mixed $rules): array
     {
         if (!is_array($rules)) {
             $rules = explode(';', $rules);
@@ -296,13 +271,13 @@ trait TraitRequest
 
         foreach ($rules as $rule) {
             $rule = explode(',', $rule);
-            
+
             if (count($rule) === 1) {
                 $pointer = &$response;
             } else {
                 $pointer = &$response['and'];
             }
-            
+
             $this->extractFilterConfig($pointer, $rule);
             unset($pointer);
         }
@@ -313,13 +288,11 @@ trait TraitRequest
 
         return $response;
     }
-    
+
     /**
      * Extract configs of filter
-     * @param array $pointer
-     * @param array $rules
      */
-    private function extractFilterConfig(array &$pointer, array $rules)
+    private function extractFilterConfig(array &$pointer, array $rules): void
     {
         foreach ($rules as $rule) {
             if ($rule === '') {
@@ -345,7 +318,7 @@ trait TraitRequest
      * @param $array array associative array with parameter name and value, where value must be a string
      * @param $operator string
      */
-    public function set($type, $array, $operator = 'OR')
+    public function set(string $type, array $array, string $operator = 'OR'): void
     {
         $this->parseQueryString();
         $operatorSeparator = ($operator === 'AND') ? ',' : ';';
@@ -368,10 +341,9 @@ trait TraitRequest
 
     /**
      * Search for operators in $value (>, <, +, etc)
-     * @param $value string
      * @return array associative array with operator and cleaned value
      */
-    private function extractFilterOperator($value)
+    private function extractFilterOperator(string $value): array
     {
         $tests = array(
             'testFilterBiggerThan'          => '>',
@@ -380,8 +352,8 @@ trait TraitRequest
             'testFilterSmallerOrEqualsThan' => '<=',
             'testFilterNotEqualThan'        => 'NOT',
         );
-        
-        $response = array (
+
+        $response = array(
             'operator' => '=',
             'value' => $value,
         );
@@ -400,67 +372,73 @@ trait TraitRequest
 
     /**
      * test operator >
-     * @param  string $value
-     * @return mixed  clean $value if the filter operator was found or null
+     * @return ?string  clean $value if the filter operator was found or null
      */
-    private function testFilterBiggerThan($value)
+    private function testFilterBiggerThan(string $value): ?string
     {
         if ($value[0] === '>') {
             return substr($value, 1);
         }
+
+        return null;
     }
 
     /**
      * test operator >=
-     * @param  string $value
-     * @return mixed  clean $value if the filter operator was found or null
+     * @param string $value
+     * @return string|null clean $value if the filter operator was found or null
      */
-    private function testFilterBiggerOrEqualsThan($value)
+    private function testFilterBiggerOrEqualsThan(string $value): ?string
     {
         $lastChar = $value[strlen($value) - 1];
         if ($lastChar === '+' || $lastChar === '>') {
             return substr($value, 0, strlen($value) - 1);
         }
+
+        return null;
     }
 
     /**
      * test operator <
-     * @param  string $value
-     * @return mixed  clean $value if the filter operator was found or null
+     * @return string|null clean $value if the filter operator was found or null
      */
-    private function testFilterSmallerThan($value)
+    private function testFilterSmallerThan(string $value): ?string
     {
         if ($value[0] === '<') {
             return substr($value, 1);
         }
+        return null;
     }
 
     /**
      * test operator <=
-     * @param  string $value
-     * @return mixed  clean $value if the filter operator was found or null
+     * @param string $value
+     * @return string|null clean $value if the filter operator was found or null
      */
-    private function testFilterSmallerOrEqualsThan($value)
+    private function testFilterSmallerOrEqualsThan($value): ?string
     {
         $lastChar = $value[strlen($value) - 1];
         if ($lastChar === '-' || $lastChar === '<') {
             return substr($value, 0, strlen($value) - 1);
         }
+        return null;
     }
 
     /**
      * test operator !
-     * @param  string $value
-     * @return mixed  clean value if the operator was found or null
+     * @param string $value
+     * @return string|null clean value if the operator was found or null
      */
-    private function testFilterNotEqualThan($value)
+    private function testFilterNotEqualThan(string $value): ?string
     {
         if ($value[0] === '!') {
             return substr($value, 1);
         }
+
+        return null;
     }
 
-    public function refresh($newData = null)
+    public function refresh(array $newData = null): void
     {
         $this->paginate = null;
         $this->page = null;

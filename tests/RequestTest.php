@@ -1,22 +1,22 @@
 <?php
+
 namespace Sigep\Request;
 
-class RequestTest extends \PHPUnit_Framework_TestCase
-{
-    /**
-     * @var Request
-     */
-    protected $object = null;
+use PHPUnit\Framework\TestCase;
 
-    public function setUp()
+class RequestTest extends TestCase
+{
+    protected Request $object;
+
+    public function setUp(): void
     {
         $_GET = [];
-        $this->object = new Request;
+        $this->object = new Request();
     }
 
     public function testCleanRequest()
     {
-        $this->assertEquals(false, $this->object->paginate());
+        $this->assertFalse($this->object->paginate());
         $this->assertEquals(1, $this->object->page());
         $this->assertEquals($this->object->getDefaultOffset(), $this->object->offset());
         $this->assertEquals([], $this->object->embed());
@@ -35,7 +35,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     public function testPaginateWhenPageIsSet()
     {
         $_GET['page'] = 7;
-        $this->assertEquals(true, $this->object->paginate());
+        $this->assertTrue($this->object->paginate());
         $this->assertEquals(7, $this->object->page());
     }
 
@@ -56,7 +56,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $_GET['embed'] = 'author,comment';
         $this->assertEquals(array('author', 'comment'), $this->object->embed());
     }
-    
+
     public function testEmbedAsArray()
     {
         $_GET['embed'] = ['author'];
@@ -89,12 +89,12 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testSimpleFilter()
     {
-        $_GET = array (
+        $_GET = array(
             'color' => 'red',
         );
 
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 '=' => ['red'],
             )
         ), $this->object->filter());
@@ -102,16 +102,16 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testMultipleFilter()
     {
-        $_GET = array (
+        $_GET = array(
             'color' => 'red',
             'size' => '16',
         );
 
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 '=' => ['red'],
             ),
-            'size' => array (
+            'size' => array(
                 '=' => ['16']
             ),
         ), $this->object->filter());
@@ -119,13 +119,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testFilterOr()
     {
-        $_GET = array (
+        $_GET = array(
             'color' => 'red;green;blue',
         );
 
-        $this->assertEquals(array (
-            'color' => array (
-                '=' => array (
+        $this->assertEquals(array(
+            'color' => array(
+                '=' => array(
                     'red',
                     'green',
                     'blue',
@@ -136,13 +136,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testFilterAND()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => '!16,!18,!19'
         );
 
-        $this->assertEquals(array (
-            'size' => array (
-                'and' => array (
+        $this->assertEquals(array(
+            'size' => array(
+                'and' => array(
                     'NOT' => ['16', '18', '19'],
                 ),
             ),
@@ -151,13 +151,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testBetweenFilter()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => '>16,<25',
         );
 
-        $this->assertEquals(array (
-            'size' => array (
-                'and' => array (
+        $this->assertEquals(array(
+            'size' => array(
+                'and' => array(
                     '>' => ['16'],
                     '<' => ['25'],
                 ),
@@ -167,13 +167,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testBetweenFilterInclusive()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => '16>,25<',
         );
 
-        $this->assertEquals(array (
-            'size' => array (
-                'and' => array (
+        $this->assertEquals(array(
+            'size' => array(
+                'and' => array(
                     '>=' => ['16'],
                     '<=' => ['25'],
                 ),
@@ -183,22 +183,22 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testFilterEmpty()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => '',
         );
 
-        $this->assertEquals(array (
+        $this->assertEquals(array(
         ), $this->object->filter());
     }
 
     public function testFilterNull()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => 'NULL',
         );
 
-        $this->assertEquals(array (
-            'size' => array (
+        $this->assertEquals(array(
+            'size' => array(
                 '=' => null,
             )
         ), $this->object->filter());
@@ -206,7 +206,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testExclusions()
     {
-        $_GET = array (
+        $_GET = array(
             'size' => '>10,<20',
             'q' => 'sherpa',
             'sort' => 'name',
@@ -215,9 +215,9 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             'embed' => 40,
         );
 
-        $this->assertEquals(array (
-            'size' => array (
-                'and' => array (
+        $this->assertEquals(array(
+            'size' => array(
+                'and' => array(
                     '>' => array(10),
                     '<' => array(20),
                 ),
@@ -227,13 +227,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testReplaceFilter()
     {
-        $_GET = array (
+        $_GET = array(
             'name' => 'luis'
         );
 
-        $this->object->set('replace', array ('name' => ''));    
+        $this->object->set('replace', array('name' => ''));
 
-        $this->assertEquals(array (
+        $this->assertEquals(array(
         ), $this->object->filter());
     }
 
@@ -244,79 +244,79 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->object->set('add', array('color' => 'white'), 'AND');
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 'and' => array(
                     '=' => ['blue', 'white']
                 )
             )
         ), $this->object->filter());
     }
-    
+
     public function testReplaceEmbedString()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => 'user',
         );
-        
-        $this->object->set('replace', array (
+
+        $this->object->set('replace', array(
             'embed' => 'city,state',
         ));
-        
+
         $this->assertEquals(
             array('city', 'state'),
             $this->object->embed()
         );
     }
-    
+
     public function testReplaceEmbedStringUsingArray()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => 'user',
         );
-        
-        $this->object->set('replace', array (
+
+        $this->object->set('replace', array(
             'embed' => array('city', 'state')
         ));
-        
+
         $this->assertEquals(
             array('city', 'state'),
             $this->object->embed()
         );
     }
-    
+
     public function testReplaceEmbedStringMultiple()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => 'user,mother',
         );
-        
-        $this->object->set('replace', array (
+
+        $this->object->set('replace', array(
             'embed' => 'city,state',
         ));
-        
+
         $this->assertEquals(
             array('city', 'state'),
             $this->object->embed()
         );
     }
-    
+
     public function testReplaceEmbedStringMultipleUsingArray()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => 'user,mother',
         );
-        
-        $this->object->set('replace', array (
+
+        $this->object->set('replace', array(
             'embed' => array('city', 'state')
         ));
-        
+
         $this->assertEquals(
             array('city', 'state'),
             $this->object->embed()
         );
     }
-    
+
     public function testAddFilterOR()
     {
         $_GET = array(
@@ -324,22 +324,22 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->object->set('add', array('color' => 'purple'));
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 '=' => ['green', 'purple']
             )
         ), $this->object->filter());
     }
 
-    public function testAddDiffKey ()
+    public function testAddDiffKey()
     {
         $_GET = array(
             'color' => 'green',
         );
 
         $this->object->set('add', array('id' => 15));
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 '=' => ['green']
             ),
             'id'    => array(
@@ -348,50 +348,39 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         ), $this->object->filter());
     }
 
-    public function testSetTypeEmpty ()
+    public function testSetTypeEmpty()
     {
         $_GET = array(
             'color' => 'green',
         );
 
         $this->object->set('', array('id' => 15));
-        $this->assertEquals(array (
-            'color' => array (
+        $this->assertEquals(array(
+            'color' => array(
                 '=' => ['green']
             )
         ), $this->object->filter());
     }
 
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testExceptionSettingDefaultOffsetWithZero()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $this->object->setDefaultOffset(0);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testExceptionSettingDefaultOffsetWithLetter()
-    {
-        $this->object->setDefaultOffset('a');
     }
 
     public function testShouldShouldConvertColonToDot()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => 'city,city:state',
             'city:city_geoname_id' => '333',
             'sort' => 'name,-city:state',
         );
 
-        $this->assertEquals(array (
+        $this->assertEquals(array(
             'city', 'city.state',
         ), $this->object->embed());
 
-        $this->assertEquals(array (
+        $this->assertEquals(array(
             'city.city_geoname_id' => ['=' => ['333']]
         ), $this->object->filter());
         $this->assertEquals(array(
@@ -402,7 +391,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testEverythingShouldWorksWhenQuerystringEnvolvsArrays()
     {
-        $_GET = array (
+        $_GET = array(
             'embed' => ['modela', 'modelb'],
             'sort' => ['columna', '-columnb'],
             'color' => ['red', 'green', 'blue'],
@@ -410,8 +399,8 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(['modela', 'modelb'], $this->object->embed());
         $this->assertEquals(['columna' => 'ASC', 'columnb' => 'DESC'], $this->object->sort());
-        $this->assertEquals(['color' => array (
-            '=' => array (
+        $this->assertEquals(['color' => array(
+            '=' => array(
                 'red',
                 'green',
                 'blue',
@@ -434,7 +423,8 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->object->paginate());
     }
 
-    public function testShoudGetParams() {
+    public function testShoudGetParams()
+    {
         $_GET = ['city' => 'city A'];
         $this->assertEquals([
             'paginate' => false,

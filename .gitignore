@@ -1,12 +1,5 @@
 vendor/
-index.php
-/nbproject
-/.idea
-/report
-/.settings
-/.buildpath
-/.project
-composer.lock
+.idea/
+coverage/
+.phpunit.cache/
 .phpunit.result.cache
-.phpunit.cache
-/coverage

@@ -28,11 +28,13 @@ trait TraitRequest
 
     /**
      * Identify which associations should be returned
+     * @var array<string>
      */
     protected ?array $embed = null;
 
     /**
      * How results must be ordered
+     * @var array<string>
      */
     protected ?array $sort = null;
 
@@ -43,16 +45,19 @@ trait TraitRequest
 
     /**
      * Filters: has fieldName, an operator and values to compare
+     * @var array<mixed>|null
      */
     protected ?array $filter = null;
 
     /**
      * raw $_GET
+     * @var array|null
      */
     protected ?array $get = null;
 
     /**
      * Determines if sort is ASC or DESC
+     * @return array<string, string> associative array with value and direction
      */
     private function defineSortDirection(string $value): array
     {
@@ -68,6 +73,7 @@ trait TraitRequest
 
     /**
      * filter $_GET
+     * @returns array<string, string | array<string>>
      * @SuppressWarnings(PHPMD.Superglobals) intentionally using $_GET
      */
     protected function parseQueryString(): array
@@ -102,7 +108,7 @@ trait TraitRequest
 
     /**
      * Return all params from querystring
-     * @return array with the keys paginage, page, offset, filter, embed, sort and search
+     * @returns array<string, string | number | array>
      */
     public function params(): array
     {
@@ -148,6 +154,7 @@ trait TraitRequest
 
     /**
      * Get name of associated data that should be returned
+     * @returns array<string>
      * ?embed=a,b,c
      */
     public function embed(): array
@@ -187,6 +194,7 @@ trait TraitRequest
      * Get rules to ordenate results
      * ?sort=field,field2
      * If the field name is preceded by a '-', the sort will be descending, otherwise ascending
+     * @returns array<string, array<string>>
      */
     public function sort(): array
     {
